@@ -8,20 +8,44 @@ inputs:
     description: "SoC to use"
     default: nrf52840
   revision:
-    description: "Board revision use"
+    description: "Board revision to use"
     default: "2.0.0"
   cmake-extra:
     description: "Extra CMake arguments"
     default: ""
+  output-bin:
+    description: "Output binary filename for the artifact"
+    default: ""
 runs:
   using: "composite"
   steps:
-    - run: |
-        docker run --rm -v ${GITHUB_WORKSPACE}:/repo \
-          ghcr.io/nrfconnect/sdk-nrf-toolchain:v3.3.0 \
-          west build \
-            --build-dir /repo/${{ inputs.sample-dir }}/build_${{ inputs.soc }}_${{ inputs.revision }} \
-            --pristine \
-            --board bparasite@${{ inputs.revision }}/${{ inputs.soc }} \
-            /repo/${{ inputs.sample-dir }} -- ${{ inputs.cmake-extra }}
+    - name: Create NCS workspace manifest
       shell: bash
+      run: |
+        mkdir -p ${{ github.workspace }}/ncs-manifest
+        {
+          echo 'manifest:'
+          echo '  remotes:'
+          echo '    - name: nrfconnect'
+          echo '      url-base: https://github.com/nrfconnect'
+          echo '  projects:'
+          echo '    - name: sdk-nrf'
+          echo '      remote: nrfconnect'
+          echo '      revision: v3.3.0'
+          echo '      import: true'
+          echo '  self:'
+          echo '    path: ncs-manifest'
+        } > ${{ github.workspace }}/ncs-manifest/west.yml
+    - name: Setup NCS
+      uses: zephyrproject-rtos/action-zephyr-setup@v1
+      with:
+        app-path: ncs-manifest
+        toolchains: 'arm-zephyr-eabi'
+    - name: Build
+      shell: bash
+      run: |
+        west build \
+          --build-dir ${{ github.workspace }}/${{ inputs.sample-dir }}/build_${{ inputs.soc }}_${{ inputs.revision }} \
+          --pristine \
+          --board bparasite@${{ inputs.revision }}/${{ inputs.soc }} \
+          ${{ github.workspace }}/${{ inputs.sample-dir }} -- ${{ inputs.cmake-extra }}
