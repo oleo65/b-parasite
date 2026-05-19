@@ -48,4 +48,7 @@ runs:
           --build-dir ${{ github.workspace }}/${{ inputs.sample-dir }}/build_${{ inputs.soc }}_${{ inputs.revision }} \
           --pristine \
           --board bparasite@${{ inputs.revision }}/${{ inputs.soc }} \
-          ${{ github.workspace }}/${{ inputs.sample-dir }} -- ${{ inputs.cmake-extra }}
+          ${{ github.workspace }}/${{ inputs.sample-dir }} -- \
+          -DBOARD_ROOT=${{ github.workspace }}/code/nrf-connect/prstlib \
+          -DDTS_ROOT=${{ github.workspace }}/code/nrf-connect/prstlib \
+          ${{ inputs.cmake-extra }}
