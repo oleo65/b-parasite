@@ -16,6 +16,9 @@ inputs:
   output-bin:
     description: "Output binary filename for the artifact"
     default: ""
+  zigbee:
+    description: "Include ncs-zigbee add-on in the west workspace"
+    default: "false"
 runs:
   using: "composite"
   steps:
@@ -23,19 +26,35 @@ runs:
       shell: bash
       run: |
         mkdir -p ${{ github.workspace }}/ncs-manifest
-        {
-          echo 'manifest:'
-          echo '  remotes:'
-          echo '    - name: nrfconnect'
-          echo '      url-base: https://github.com/nrfconnect'
-          echo '  projects:'
-          echo '    - name: sdk-nrf'
-          echo '      remote: nrfconnect'
-          echo '      revision: v3.3.0'
-          echo '      import: true'
-          echo '  self:'
-          echo '    path: ncs-manifest'
-        } > ${{ github.workspace }}/ncs-manifest/west.yml
+        if [ "${{ inputs.zigbee }}" = "true" ]; then
+          {
+            echo 'manifest:'
+            echo '  remotes:'
+            echo '    - name: nrfconnect'
+            echo '      url-base: https://github.com/nrfconnect'
+            echo '  projects:'
+            echo '    - name: ncs-zigbee'
+            echo '      remote: nrfconnect'
+            echo '      revision: main'
+            echo '      import: true'
+            echo '  self:'
+            echo '    path: ncs-manifest'
+          } > ${{ github.workspace }}/ncs-manifest/west.yml
+        else
+          {
+            echo 'manifest:'
+            echo '  remotes:'
+            echo '    - name: nrfconnect'
+            echo '      url-base: https://github.com/nrfconnect'
+            echo '  projects:'
+            echo '    - name: sdk-nrf'
+            echo '      remote: nrfconnect'
+            echo '      revision: v3.3.0'
+            echo '      import: true'
+            echo '  self:'
+            echo '    path: ncs-manifest'
+          } > ${{ github.workspace }}/ncs-manifest/west.yml
+        fi
     - name: Setup NCS
       uses: zephyrproject-rtos/action-zephyr-setup@v1
       with:

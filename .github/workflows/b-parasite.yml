@@ -109,3 +109,4 @@ jobs:
           revision: ${{ matrix.revision }}
           cmake-extra: -DCONFIG_PRSTLIB_LOG_LEVEL_DBG=y
           output-bin: zigbee_${{ matrix.soc }}_${{ matrix.revision }}_debug.hex
+          zigbee: 'true'
